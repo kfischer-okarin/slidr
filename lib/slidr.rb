@@ -6,6 +6,7 @@ def tick(args)
 
   current_slide = state.presentation[:slides][state.current_slide_index]
   render_slide(args, current_slide)
+  render_slide_progress(args, state.current_slide_index, state.presentation[:slides].length)
 end
 
 def handle_input(args)
@@ -51,6 +52,13 @@ def render_slide(args, slide)
       end
     end
   end
+end
+
+def render_slide_progress(args, current_slide_index, slide_count)
+  bar_base = { x: 0, y: 0, h: 10, path: :pixel }
+  args.outputs.sprites << bar_base.merge(w: 1280, r: 150, g: 150, b: 150)
+  progress_color = { r: 0, g: 150, b: 0 }
+  args.outputs.sprites << bar_base.merge(w: 1280 * (current_slide_index + 1) / slide_count, **progress_color)
 end
 
 module SliDR
