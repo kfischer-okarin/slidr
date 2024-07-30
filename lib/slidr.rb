@@ -2,8 +2,23 @@ def tick(args)
   state = args.state
   state.current_slide_index ||= 0
 
+  handle_input(args)
+
   current_slide = state.presentation[:slides][state.current_slide_index]
   render_slide(args, current_slide)
+end
+
+def handle_input(args)
+  key_down = args.inputs.keyboard.key_down
+  slide_count = args.state.presentation[:slides].length
+
+  if key_down.enter || key_down.space || key_down.right
+    args.state.current_slide_index = [args.state.current_slide_index + 1, slide_count - 1].min
+  end
+
+  if key_down.left
+    args.state.current_slide_index = [args.state.current_slide_index - 1, 0].max
+  end
 end
 
 def render_slide(args, slide)
@@ -13,14 +28,23 @@ def render_slide(args, slide)
     when :title
       args.outputs.labels << {
         x: 640, y: y, text: element[:text],
-        size_enum: 10, alignment_enum: 1
+        size_enum: 20, alignment_enum: 1
       }
-      y -= 50
+      y -= 80
     when :subtitle
       args.outputs.labels << {
         x: 640, y: y, text: element[:text],
-        size_enum: 5, alignment_enum: 1
+        size_enum: 10, alignment_enum: 1
       }
+      y -= 40
+    when :list
+      element[:items].each do |item|
+        args.outputs.labels << {
+          x: 20, y: y, text: "・ #{item}",
+          size_enum: 12
+        }
+        y -= 50
+      end
     end
   end
 end
@@ -57,6 +81,22 @@ module SliDR
 
     def subtitle(text)
       @elements << { type: :subtitle, text: text }
+    end
+
+    def list(&block)
+      list = []
+      ListDSL.new(list).instance_exec(&block)
+      @elements << { type: :list, items: list }
+    end
+  end
+
+  class ListDSL
+    def initialize(list)
+      @list = list
+    end
+
+    def item(text)
+      @list << text
     end
   end
 end
