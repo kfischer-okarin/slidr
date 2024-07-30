@@ -10,15 +10,19 @@ end
 
 def handle_input(args)
   key_down = args.inputs.keyboard.key_down
-  slide_count = args.state.presentation[:slides].length
 
-  if key_down.enter || key_down.space || key_down.right
-    args.state.current_slide_index = [args.state.current_slide_index + 1, slide_count - 1].min
-  end
+  next_slide if key_down.enter || key_down.space || key_down.right
 
-  if key_down.left
-    args.state.current_slide_index = [args.state.current_slide_index - 1, 0].max
-  end
+  previous_slide if key_down.left
+end
+
+def next_slide
+  slide_count = $state.presentation[:slides].length
+  $state.current_slide_index = [$state.current_slide_index + 1, slide_count - 1].min
+end
+
+def previous_slide
+  $state.current_slide_index = [$state.current_slide_index - 1, 0].max
 end
 
 def render_slide(args, slide)
