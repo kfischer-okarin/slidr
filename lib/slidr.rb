@@ -1,12 +1,13 @@
 def tick(args)
   state = args.state
+  state.timer ||= { state: :stopped }
   state.current_slide_index ||= 0
 
   handle_input(args)
 
   current_slide = state.presentation[:slides][state.current_slide_index]
   render_slide(args, current_slide)
-  render_slide_progress(args, state.current_slide_index, state.presentation[:slides].length)
+  render_slide_progress(args)
 end
 
 def handle_input(args)
@@ -24,6 +25,11 @@ end
 
 def previous_slide
   $state.current_slide_index = [$state.current_slide_index - 1, 0].max
+end
+
+def start_timer
+  $state.timer[:state] = :running
+  $state.timer[:start_time] = Time.now
 end
 
 def render_slide(args, slide)
@@ -54,11 +60,28 @@ def render_slide(args, slide)
   end
 end
 
-def render_slide_progress(args, current_slide_index, slide_count)
+ON_TIME_COLOR = { r: 0, g: 150, b: 0 }
+LATE_COLOR = { r: 150, g: 0, b: 0 }
+
+def render_slide_progress(args)
+  current_slide_index = args.state.current_slide_index
+  slide_count = args.state.presentation[:slides].length
+  progress = (current_slide_index + 1) / slide_count
+
   bar_base = { x: 0, y: 0, h: 10, path: :pixel }
   args.outputs.sprites << bar_base.merge(w: 1280, r: 150, g: 150, b: 150)
-  progress_color = { r: 0, g: 150, b: 0 }
-  args.outputs.sprites << bar_base.merge(w: 1280 * (current_slide_index + 1) / slide_count, **progress_color)
+
+
+  timer = args.state.timer
+  time_progress = 0
+
+  if timer[:state] == :running
+    time_progress = [(Time.now - timer[:start_time]) / args.state.presentation[:time_limit], 1].min
+  end
+  progress_color = time_progress <= progress ? ON_TIME_COLOR : LATE_COLOR
+
+  args.outputs.sprites << bar_base.merge(w: 1280 * progress, **progress_color)
+  args.outputs.sprites << bar_base.merge(y: 10, h: 5, w: 1280 * time_progress, r: 128, g: 128, b: 128)
 end
 
 module SliDR
@@ -78,6 +101,10 @@ module SliDR
       slide = { elements: [] }
       SlideDSL.new(slide).instance_exec(&block)
       @presentation[:slides] << slide
+    end
+
+    def time_limit(minutes:)
+      @presentation[:time_limit] = minutes * 60
     end
   end
 
