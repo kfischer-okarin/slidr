@@ -15,5 +15,13 @@ SliDR.present do
       item 'Easy to use'
       item 'Extensible'
     end
+
+    code_block('ruby', <<~RUBY)
+      def slide(&block)
+        slide = { elements: [] }
+        SlideDSL.new(slide).instance_exec(&block)
+        @presentation[:slides] << slide
+      end
+    RUBY
   end
 end
