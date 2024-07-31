@@ -9,6 +9,7 @@
   "author": "Kevin Fischer",
   "license": "MIT",
   "dependencies": {
-    "@wooorm/starry-night": "^3.4.0"
+    "@wooorm/starry-night": "^3.4.0",
+    "express": "^4.19.2"
   }
 }
