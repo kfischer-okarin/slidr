@@ -1,4 +1,5 @@
 def tick(args)
+  start_highlight_server_if_needed
   state = args.state
   state.timer ||= { state: :stopped }
   state.current_slide_index ||= 0
@@ -58,6 +59,13 @@ def render_slide(args, slide)
       end
     end
   end
+end
+
+def start_highlight_server_if_needed
+  return if $highlight_server_pid
+
+  $highlight_server_pid = `node #{$gtk.get_game_dir}/syntax-highlighting > /dev/null & echo $!`
+  log "Started highlight server with PID #{$highlight_server_pid}"
 end
 
 ON_TIME_COLOR = { r: 0, g: 150, b: 0 }
